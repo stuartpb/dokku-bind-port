@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+
+APP="$1"
+BIND_FILE="PUBLISH"
+BIND_FILE_PATH="$DOKKU_ROOT/$APP/$BIND_FILE"
+
+if [[ -f "$BIND_FILE_PATH" ]]; then
+  while read line
+  do
+    output="$output -p $line"
+  done < $BIND_FILE_PATH
+
+  echo "$output"
+fi

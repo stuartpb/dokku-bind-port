@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+
+# Check if name is specified
+if [[ $1 == bind ]] || [[ $1 == bind:* ]]; then
+  if [[ -z $2 ]]; then
+    echo "You must specify an app name"
+    exit 1
+  else
+    APP="$2"
+    BIND_FILE="$DOKKU_ROOT/$APP/PUBLISH"
+
+    # Check if app exists with the same name
+    if [ ! -d "$DOKKU_ROOT/$APP" ]; then
+      echo "App $APP does not exist"
+      exit 1
+    fi
+
+    [ -f $BIND_FILE ] || {
+      echo "-----> Creating $BIND_FILE"
+      touch $BIND_FILE
+    }
+  fi
+fi
+
+bind_restart_app() {
+  APP="$1";
+
+  echo "-----> Releasing $APP ..."
+  dokku release $APP
+  echo "-----> Release complete!"
+  echo "-----> Deploying $APP ..."
+  dokku deploy $APP
+  echo "-----> Deploy complete!"
+}
+
+case "$1" in
+  bind)
+    APP="$2"
+
+    if [ ! -f $BIND_FILE ] || [ ! -s $BIND_FILE ] ; then
+      echo "$APP has no host bindings"
+      exit 1
+    fi
+
+    echo "=== $APP host bindings ==="
+    cat $BIND_FILE
+  ;;
+
+  bind:create)
+    if [[ -z "${*:3}" ]]; then
+      echo "Usage: dokku bind:create APP CONTAINER_PORT [HOST_PORT]"
+      echo "Must specify CONTAINER_PORT to bind."
+      exit 1
+    fi
+
+    CONTAINER_PORT="$3"
+    if [[ -z $4 ]]; then
+      HOST_PORT=$(echo $CONTAINER_PORT | sed s:/udp$::)
+    else
+      HOST_PORT="$4"
+    fi
+
+    VAR="$HOST_PORT:$CONTAINER_PORT"
+    echo "-----> Binding port $VAR in $APP"
+    echo "$VAR" >> $BIND_FILE
+    BIND_TEMP=`cat $BIND_FILE`
+    echo -e "$BIND_TEMP" | sed '/^$/d' | sort -u > $BIND_FILE
+    bind_restart_app $APP
+  ;;
+
+  bind:delete)
+    if [[ -z $3 ]]; then
+      echo "Usage: dokku bind:delete APP CONTAINER_PORT"
+      echo "Must specify CONTAINER_PORT to unbind."
+      exit 1
+    fi
+
+    CONTAINER_PORT="$3"
+
+    echo "-----> Unbinding port $CONTAINER_PORT in $APP"
+    BIND_TEMP=`cat "$BIND_FILE"`
+    BIND_TEMP=$(echo "$BIND_TEMP" | sed "s/^.*:$CONTAINER_PORT$//")
+    echo "$BIND_TEMP" | sed '/^$/d' | sort -u > $BIND_FILE
+    bind_restart_app $APP
+  ;;
+
+  help)
+    cat && cat<<EOF
+    bind <app>                                    display host bindings for an app
+    bind:create <app> CONTAINER_PORT [HOST_PORT]  create a host binding for an app
+    bind:delete <app> CONTAINER_PORT              delete a host binding for an app
+EOF
+  ;;
+
+esac
