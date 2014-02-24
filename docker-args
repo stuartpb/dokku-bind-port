@@ -11,5 +11,5 @@ if [[ -f "$BIND_FILE_PATH" ]]; then
     output="$output -p $line"
   done < $BIND_FILE_PATH
 
-  echo "$output"
+  echo "$(cat)$output"
 fi
