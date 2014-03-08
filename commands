@@ -26,9 +26,6 @@ fi
 bind_restart_app() {
   APP="$1";
 
-  echo "-----> Releasing $APP ..."
-  dokku release $APP
-  echo "-----> Release complete!"
   echo "-----> Deploying $APP ..."
   dokku deploy $APP
   echo "-----> Deploy complete!"
