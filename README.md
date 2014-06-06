@@ -27,7 +27,14 @@ $ dokku help
     bind:create <app> CONTAINER_PORT [HOST_PORT]  create a host binding for an app
     bind:delete <app> CONTAINER_PORT              delete a host binding for an app
 
-# Example    
+# Example
+
+$ ssh root@yourdomain.com
+$ docker ps -a
+
+CONTAINER ID        IMAGE                       COMMAND                   PORTS                                           
+a12c427d5fga        dokku/yourapp:latest        /bin/bash -c '/start      0.0.0.0:49173->5000/tcp
+
 $ dokku bind:create app 5000 49173
 ```
 
