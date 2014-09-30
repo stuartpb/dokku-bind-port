@@ -77,7 +77,7 @@ case "$1" in
 
     echo "-----> Unbinding port $CONTAINER_PORT in $APP"
     BIND_TEMP=`cat "$BIND_FILE"`
-    BIND_TEMP=$(echo "$BIND_TEMP" | sed "s/^.*:$CONTAINER_PORT$//")
+    BIND_TEMP=$(echo "$BIND_TEMP" | sed "s|^.*:$CONTAINER_PORT$||")
     echo "$BIND_TEMP" | sed '/^$/d' | sort -u > $BIND_FILE
     bind_restart_app $APP
   ;;
