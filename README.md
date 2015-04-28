@@ -1,3 +1,24 @@
+## This project is deprecated
+
+When this plugin was written, Dokku restarted app servers by first stopping the old build, then starting the new build. However, Dokku has since changed the way it restarts app servers to start the new build *before* stopping the old build: if the app's port is bound, this causes a conflict between the old instance and the new one (as the old instance doesn't relinquish the port until it is stopped), and **new builds will fail to start**. (See [issue #5][].)
+
+[issue #5]: https://github.com/stuartpb/dokku-bind-port/issues/5
+
+Besides that major issue with port binding, this plugin's functionality can entirely be duplicated by setting `-p` options for `docker run` using the [dokku-docker-options][] plugin, which is also significantly more simple and versatile (allowing one to achieve other goals, such as mounting a volume in an app).
+
+[dokku-docker-options]: https://github.com/dyson/dokku-docker-options
+
+Ultimately, since mid/late 2014, I've personally stopped using Dokku altogether, switching to [Plushu][] instead. If you want this plugin's functionality in Plushu, you can use the [plushu-app-docker-opts][] plugin to add a `-p 5000:80` option to the app. You will also need to create a file named `SINGLE_INSTANCE` in the app's directory (using a direct shell account to the Plushu server):
+
+```bash
+ssh root@plushu.example.com su -s /bin/sh -c "touch /home/plushu/apps/$app/SINGLE_INSTANCE" plushu
+```
+
+This tells the Plushu local app deployment plugin to stop the old build before starting the new one, avoiding the aforementioned issue with concurrent builds seen with Dokku.
+
+[Plushu]: https://github.com/plushu/plushu
+[plushu-app-docker-opts]: https://github.com/plushu/plushu-app-docker-opts
+
 # dokku-bind-port
 
 Dokku plugin for binding app container ports to host interfaces
